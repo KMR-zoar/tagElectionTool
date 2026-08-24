@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>プロフタグ総選挙 集計ツール</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app-root">
+
+  <header class="app-header">
+    <h1>プロフタグ総選挙 集計</h1>
+  </header>
+
+  <main class="tab-panels">
+
+    <!-- ============== 1. メイン入力画面 ============== -->
+    <section id="panel-entry" class="tab-panel" data-panel="entry">
+      <form id="entry-form" autocomplete="off">
+
+        <div class="field-group">
+          <label for="tag-input">タグ</label>
+          <div class="autocomplete">
+            <input type="text" id="tag-input" placeholder="タグを検索(例: 甘やかし)" autocomplete="off">
+            <ul id="tag-suggestions" class="suggestions" hidden></ul>
+          </div>
+          <div class="selected-tag-chip" id="selected-tag-chip" hidden>
+            選択中のタグ: <strong id="selected-tag-text"></strong>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="listener-input">リスナー名(任意)</label>
+          <div class="autocomplete">
+            <input type="text" id="listener-input" placeholder="空欄の場合は自動で匿名採番されます" autocomplete="off">
+            <ul id="listener-suggestions" class="suggestions" hidden></ul>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <span class="field-label">ポイント入力方式</span>
+          <div class="mode-toggle" id="points-mode-toggle">
+            <button type="button" class="mode-btn active" data-mode="direct">直接入力</button>
+            <button type="button" class="mode-btn" data-mode="combo">コンボ入力</button>
+          </div>
+        </div>
+
+        <div class="field-group points-mode-panel" id="points-direct">
+          <label for="points-input">ポイント数</label>
+          <input type="number" id="points-input" inputmode="numeric" pattern="[0-9]*" min="1" step="1" placeholder="例: 300">
+        </div>
+
+        <div class="field-group points-mode-panel" id="points-combo" hidden>
+          <div class="combo-inputs">
+            <div class="combo-field">
+              <label for="combo-unit">ギフト単価pt</label>
+              <input type="number" id="combo-unit" inputmode="numeric" pattern="[0-9]*" min="1" step="1" placeholder="例: 100">
+            </div>
+            <span class="combo-times">×</span>
+            <div class="combo-field">
+              <label for="combo-count">コンボ数</label>
+              <input type="number" id="combo-count" inputmode="numeric" pattern="[0-9]*" min="1" step="1" placeholder="例: 5">
+            </div>
+          </div>
+          <div class="combo-result">合計ポイント: <strong id="combo-total">0</strong> pt</div>
+        </div>
+
+        <div class="votes-preview">
+          票数プレビュー: <strong id="votes-preview">0</strong> 票
+          <div class="hint">(投票ポイント ÷ 投票単位ポイントの簡易計算。繰り越し分は含みません)</div>
+        </div>
+
+        <div class="entry-actions">
+          <button type="submit" class="btn btn-primary btn-large" id="register-btn">登録する</button>
+          <button type="button" class="btn btn-secondary" id="undo-btn">直前の登録を取り消す</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============== 2. 集計タブ ============== -->
+    <section id="panel-aggregate" class="tab-panel" data-panel="aggregate" hidden>
+      <div class="sub-tabs" id="aggregate-sub-tabs">
+        <button class="sub-tab-btn active" data-subtab="tag">タグ</button>
+        <button class="sub-tab-btn" data-subtab="listener">リスナー</button>
+        <button class="sub-tab-btn" data-subtab="carry">端数</button>
+      </div>
+      <div class="sub-panel" id="sub-panel-tag" data-subpanel="tag"></div>
+      <div class="sub-panel" id="sub-panel-listener" data-subpanel="listener" hidden></div>
+      <div class="sub-panel" id="sub-panel-carry" data-subpanel="carry" hidden></div>
+    </section>
+
+    <!-- ============== 3. 管理・設定タブ ============== -->
+    <section id="panel-admin" class="tab-panel" data-panel="admin" hidden>
+
+      <div class="admin-section">
+        <h2>投票単位ポイント</h2>
+        <p>現在の設定: <strong id="current-unit-display">-</strong> pt</p>
+        <div class="unit-history-chips" id="unit-history-chips"></div>
+        <form id="unit-form" class="unit-form">
+          <input type="number" id="unit-input" inputmode="numeric" pattern="[0-9]*" min="1" step="1">
+          <button type="submit" class="btn btn-secondary">変更</button>
+        </form>
+      </div>
+
+      <div class="admin-section" id="export-image-section">
+        <h2>ランキング画像出力</h2>
+        <p class="hint">タグ得票上位15件を画像として書き出します。</p>
+        <button type="button" class="btn btn-secondary" id="export-image-btn">画像を作成して共有 / 保存</button>
+      </div>
+
+      <div class="admin-section">
+        <h2>投票履歴</h2>
+        <div id="history-list"></div>
+      </div>
+
+      <div class="admin-section admin-danger">
+        <h2>全データリセット</h2>
+        <p class="hint">投票ログ・タグ得票・リスナー状態・匿名連番をすべて削除します。投票単位ポイントの設定は維持されます。</p>
+        <button type="button" class="btn btn-danger" id="reset-all-btn">全データをリセット</button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <nav class="tab-nav" id="main-tab-nav">
+    <button class="tab-btn active" data-tab="entry">入力</button>
+    <button class="tab-btn" data-tab="aggregate">集計</button>
+    <button class="tab-btn" data-tab="admin">管理・設定</button>
+  </nav>
+
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<!-- 訂正用モーダル -->
+<div id="edit-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <h2>投票を編集</h2>
+    <form id="edit-form">
+      <input type="hidden" id="edit-id">
+      <div class="field-group">
+        <label for="edit-tag">タグ</label>
+        <select id="edit-tag"></select>
+      </div>
+      <div class="field-group">
+        <label for="edit-listener">リスナー名</label>
+        <input type="text" id="edit-listener">
+      </div>
+      <div class="field-group">
+        <label for="edit-points">ポイント数</label>
+        <input type="number" id="edit-points" inputmode="numeric" pattern="[0-9]*" min="1" step="1">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">保存</button>
+        <button type="button" class="btn btn-secondary" id="edit-cancel-btn">キャンセル</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<canvas id="ranking-canvas" hidden></canvas>
+
+<script src="app.js"></script>
+</body>
+</html>

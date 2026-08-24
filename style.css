@@ -1,0 +1,566 @@
+:root {
+  --color-bg: #f7f6fb;
+  --color-surface: #ffffff;
+  --color-primary: #7c5cff;
+  --color-primary-dark: #6444e0;
+  --color-text: #2b2833;
+  --color-text-muted: #726d7c;
+  --color-border: #e3e0ec;
+  --color-danger: #e0507a;
+  --color-danger-dark: #c53a63;
+  --tab-nav-height: 60px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+button, input, select {
+  font-family: inherit;
+  font-size: 16px;
+}
+
+h1, h2 {
+  margin: 0 0 12px;
+}
+
+#app-root {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  padding-bottom: calc(var(--tab-nav-height) + 16px);
+}
+
+.app-header {
+  padding: 16px;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.app-header h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.tab-panels {
+  flex: 1;
+  padding: 16px;
+}
+
+.tab-panel[hidden] {
+  display: none;
+}
+
+/* ---------- フォーム共通 ---------- */
+.field-group {
+  margin-bottom: 18px;
+}
+
+.field-group label,
+.field-label {
+  display: block;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+input:focus, select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn-primary:active {
+  background: var(--color-primary-dark);
+}
+
+.btn-secondary {
+  background: #ece9f7;
+  color: var(--color-text);
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+.btn-danger:active {
+  background: var(--color-danger-dark);
+}
+
+.btn-large {
+  width: 100%;
+  font-size: 17px;
+}
+
+.entry-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* ---------- オートコンプリート ---------- */
+.autocomplete {
+  position: relative;
+}
+
+.suggestions {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(43, 40, 51, 0.15);
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+}
+
+.suggestions[hidden] {
+  display: none;
+}
+
+.suggestions li {
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.suggestions li .cat {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.suggestions li.active,
+.suggestions li:hover {
+  background: #f0edfc;
+}
+
+.selected-tag-chip {
+  margin-top: 8px;
+  display: inline-block;
+  background: #efe9ff;
+  color: var(--color-primary-dark);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+/* ---------- ポイント入力 ---------- */
+.mode-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mode-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.points-mode-panel[hidden] {
+  display: none;
+}
+
+.combo-inputs {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.combo-field {
+  flex: 1;
+}
+
+.combo-times {
+  padding-bottom: 12px;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.combo-result {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.votes-preview {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  font-size: 15px;
+}
+
+.votes-preview .hint,
+.hint {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* ---------- タブナビゲーション ---------- */
+.tab-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  height: var(--tab-nav-height);
+  box-shadow: 0 -2px 12px rgba(43, 40, 51, 0.08);
+}
+
+.tab-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  color: var(--color-primary);
+}
+
+/* ---------- サブタブ(集計画面) ---------- */
+.sub-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.sub-tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sub-tab-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.sub-panel[hidden] {
+  display: none;
+}
+
+/* ---------- ランキングテーブル ---------- */
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ranking-table th, .ranking-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ranking-table th {
+  background: #f0edfc;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.ranking-table td:first-child,
+.ranking-table th:first-child {
+  width: 48px;
+  text-align: center;
+}
+
+.ranking-table td:last-child,
+.ranking-table th:last-child {
+  text-align: right;
+}
+
+.empty {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 24px 0;
+}
+
+/* ---------- 端数タブ (カード) ---------- */
+.carry-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.carry-row-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.carry-row-top .carry-pt {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #ece9f7;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+}
+
+.carry-remaining {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* ---------- 管理・設定タブ ---------- */
+.admin-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.admin-danger {
+  border-color: #f4c9d6;
+}
+
+.unit-history-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.unit-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: #f0edfc;
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.unit-chip.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.unit-form {
+  display: flex;
+  gap: 8px;
+}
+
+.unit-form input {
+  flex: 1;
+}
+
+/* ---------- 投票履歴 ---------- */
+.history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.history-row:last-child {
+  border-bottom: none;
+}
+
+.history-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.history-time {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.history-listener {
+  font-weight: 700;
+}
+
+.history-tag {
+  color: var(--color-primary-dark);
+}
+
+.history-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.history-actions button {
+  padding: 8px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.history-actions .delete-btn {
+  color: var(--color-danger);
+  border-color: #f4c9d6;
+}
+
+/* ---------- トースト ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tab-nav-height) + 16px);
+  transform: translateX(-50%);
+  background: rgba(43, 40, 51, 0.92);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  z-index: 100;
+  max-width: 90%;
+  text-align: center;
+}
+
+.toast[hidden] {
+  display: none;
+}
+
+/* ---------- モーダル ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 40, 51, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal {
+  background: var(--color-surface);
+  border-radius: 14px;
+  padding: 20px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.modal-actions .btn {
+  flex: 1;
+}
+
+/* ---------- タブレット / PC 対応 ---------- */
+@media (min-width: 600px) {
+  #app-root {
+    max-width: 640px;
+  }
+  .tab-nav {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #app-root {
+    max-width: 760px;
+    box-shadow: 0 0 40px rgba(43, 40, 51, 0.06);
+  }
+  .tab-nav {
+    max-width: 760px;
+  }
+  .combo-inputs {
+    max-width: 480px;
+  }
+}
