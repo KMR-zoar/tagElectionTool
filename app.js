@@ -101,8 +101,24 @@ function computeDerivedState(logs, voteUnitPoint) {
   const listenerCarry = new Map(); // listenerName -> carryOverPoints
   const listenerVotes = new Map(); // listenerName -> totalVotes
   const tagVotes = new Map(); // tag -> votes
+  const listenerUnclassified = new Map(); // listenerName -> 未分類ptプール残高(端数carryとは別会計)
 
   for (const log of logs) {
+    if (log.tag == null && !log.fromUnclassified) {
+      // タグ未確定のギフト: 未分類プールに積むだけで、carry/tagVotesには影響させない
+      const prevUnclassified = listenerUnclassified.get(log.listenerName) || 0;
+      listenerUnclassified.set(log.listenerName, prevUnclassified + log.points);
+      continue;
+    }
+
+    if (log.fromUnclassified) {
+      // 未分類プールから確定消費した分を差し引く。points は常に voteUnitPoint の倍数なので、
+      // 下の一般carry計算にそのまま乗せても newCarry は変化せず(端数carryを汚染しない)、
+      // ちょうど points/voteUnitPoint 票だけが加算される。
+      const prevUnclassified = listenerUnclassified.get(log.listenerName) || 0;
+      listenerUnclassified.set(log.listenerName, prevUnclassified - log.points);
+    }
+
     const prevCarry = listenerCarry.get(log.listenerName) || 0;
     const totalTemp = prevCarry + log.points;
     const votesToAdd = Math.floor(totalTemp / voteUnitPoint);
@@ -115,7 +131,7 @@ function computeDerivedState(logs, voteUnitPoint) {
     }
   }
 
-  return { listenerCarry, listenerVotes, tagVotes };
+  return { listenerCarry, listenerVotes, tagVotes, listenerUnclassified };
 }
 
 function getListenerNameHistory() {
@@ -142,8 +158,8 @@ function nextAnonymousName() {
   return '名無し' + String(settings.anonymousCounter).padStart(3, '0');
 }
 
-function registerVote({ tag, listenerName, points }) {
-  if (!tag) throw new Error('タグが指定されていません');
+function registerVote({ tag, listenerName, points, allowUnclassified = false }) {
+  if (!tag && !allowUnclassified) throw new Error('タグが指定されていません');
   const pts = clampInt(points, 0);
   if (pts <= 0) throw new Error('ポイント数は1以上を指定してください');
 
@@ -153,7 +169,7 @@ function registerVote({ tag, listenerName, points }) {
     id: uuid(),
     timestamp: new Date().toISOString(),
     listenerName: name,
-    tag,
+    tag: tag || null,
     points: pts,
   };
 
@@ -162,6 +178,42 @@ function registerVote({ tag, listenerName, points }) {
   saveLogs(logs);
 
   return { log };
+}
+
+/**
+ * 未分類プールの一部(または全部)を指定タグへの投票として確定する。
+ * 消費できるのは voteUnitPoint の倍数分のみで、端数は未分類プールに残る。
+ */
+function confirmUnclassifiedPoints({ listenerName, tag, points }) {
+  if (!tag) throw new Error('タグを選択してください');
+  const pts = clampInt(points, 0);
+  if (pts <= 0) throw new Error('ポイント数は1以上を指定してください');
+
+  const settings = loadSettings();
+  const unit = settings.voteUnitPoint;
+  const logs = loadLogs();
+  const { listenerUnclassified } = computeDerivedState(logs, unit);
+  const balance = listenerUnclassified.get(listenerName) || 0;
+
+  if (pts > balance) throw new Error('未分類の残高を超えています');
+
+  const votesToAdd = Math.floor(pts / unit);
+  if (votesToAdd < 1) throw new Error(`1票分(${unit}pt)以上を指定してください`);
+
+  const consumed = votesToAdd * unit;
+  const log = {
+    id: uuid(),
+    timestamp: new Date().toISOString(),
+    listenerName,
+    tag,
+    points: consumed,
+    fromUnclassified: true,
+  };
+
+  logs.push(log);
+  saveLogs(logs);
+
+  return { log, votesAdded: votesToAdd, remainingUnclassified: balance - consumed };
 }
 
 function undoLastVote() {
@@ -389,6 +441,7 @@ function setupEntryScreen() {
   const votesPreview = document.getElementById('votes-preview');
 
   const entryForm = document.getElementById('entry-form');
+  const registerUnclassifiedBtn = document.getElementById('register-unclassified-btn');
   const undoBtn = document.getElementById('undo-btn');
 
   function updateSelectedTagDisplay() {
@@ -501,6 +554,28 @@ function setupEntryScreen() {
     }
   });
 
+  registerUnclassifiedBtn.addEventListener('click', () => {
+    try {
+      const points = getCurrentPoints();
+      if (points <= 0) {
+        showToast('ポイント数を入力してください');
+        return;
+      }
+      const { log } = registerVote({
+        tag: null,
+        listenerName: listenerInput.value,
+        points,
+        allowUnclassified: true,
+      });
+      showToast(`未分類として登録しました: ${log.listenerName} +${log.points}pt`);
+      clearEntryFieldsExceptTag();
+      refreshAllViews();
+      listenerInput.focus();
+    } catch (err) {
+      showToast(err.message);
+    }
+  });
+
   undoBtn.addEventListener('click', () => {
     const removed = undoLastVote();
     if (!removed) {
@@ -591,10 +666,40 @@ function renderCarryOverTab() {
     .join('');
 }
 
+function renderUnclassifiedTab() {
+  const container = document.getElementById('sub-panel-unclassified');
+  const logs = loadLogs();
+  const settings = loadSettings();
+  const { listenerUnclassified } = computeDerivedState(logs, settings.voteUnitPoint);
+
+  const rows = [...listenerUnclassified.entries()]
+    .filter(([, balance]) => balance > 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  if (rows.length === 0) {
+    container.innerHTML = '<p class="empty">未分類のギフトはありません</p>';
+    return;
+  }
+
+  container.innerHTML = rows
+    .map(
+      ([name, balance]) => `
+        <div class="carry-card">
+          <div class="carry-row-top">
+            <span class="name">${escapeHtml(name)}</span>
+            <span class="carry-pt">${balance} pt</span>
+          </div>
+          <button type="button" class="btn btn-secondary confirm-unclassified-btn" data-name="${escapeHtml(name)}" data-balance="${balance}">タグを確定する</button>
+        </div>`
+    )
+    .join('');
+}
+
 function renderAggregateTabs() {
   renderTagRanking();
   renderListenerRanking();
   renderCarryOverTab();
+  renderUnclassifiedTab();
 }
 
 /* =========================================================================
@@ -644,6 +749,12 @@ function setupUnitSettings() {
   });
 }
 
+function formatHistoryTagLabel(log) {
+  if (log.fromUnclassified) return `未分類確定 → ${escapeHtml(log.tag)}`;
+  if (log.tag == null) return '(未分類)';
+  return escapeHtml(log.tag);
+}
+
 function renderHistoryList() {
   const container = document.getElementById('history-list');
   const logs = loadLogs();
@@ -661,7 +772,7 @@ function renderHistoryList() {
         <div class="history-main">
           <span class="history-time">${formatDateTime(log.timestamp)}</span>
           <span class="history-listener">${escapeHtml(log.listenerName)}</span>
-          <span class="history-tag">${escapeHtml(log.tag)} / ${log.points}pt</span>
+          <span class="history-tag">${formatHistoryTagLabel(log)} / ${log.points}pt</span>
         </div>
         <div class="history-actions">
           <button type="button" class="edit-btn" data-id="${log.id}">編集</button>
@@ -673,9 +784,12 @@ function renderHistoryList() {
 }
 
 function populateEditTagSelect(selectEl, currentTag) {
-  selectEl.innerHTML = TAG_DATA.map(
-    (t) => `<option value="${escapeHtml(t.tag)}"${t.tag === currentTag ? ' selected' : ''}>${escapeHtml(t.tag)} (${escapeHtml((t.categories || []).join(' / '))})</option>`
-  ).join('');
+  const blankOption = `<option value=""${currentTag == null ? ' selected' : ''}>(未分類のまま)</option>`;
+  selectEl.innerHTML =
+    blankOption +
+    TAG_DATA.map(
+      (t) => `<option value="${escapeHtml(t.tag)}"${t.tag === currentTag ? ' selected' : ''}>${escapeHtml(t.tag)} (${escapeHtml((t.categories || []).join(' / '))})</option>`
+    ).join('');
 }
 
 function setupHistoryList() {
@@ -733,13 +847,81 @@ function setupHistoryList() {
       return;
     }
     updateVoteLog(editIdInput.value, {
-      tag: editTagSelect.value,
+      tag: editTagSelect.value === '' ? null : editTagSelect.value,
       listenerName: editListenerInput.value.trim() || nextAnonymousName(),
       points: pts,
     });
     closeEditModal();
     showToast('更新しました');
     refreshAllViews();
+  });
+}
+
+function setupUnclassifiedConfirm() {
+  const aggregatePanel = document.getElementById('sub-panel-unclassified');
+  const modal = document.getElementById('confirm-unclassified-modal');
+  const form = document.getElementById('confirm-unclassified-form');
+  const nameEl = document.getElementById('confirm-unclassified-name');
+  const balanceEl = document.getElementById('confirm-unclassified-balance');
+  const tagSelect = document.getElementById('confirm-tag-select');
+  const pointsInput = document.getElementById('confirm-points-input');
+  const previewEl = document.getElementById('confirm-unclassified-preview');
+  const cancelBtn = document.getElementById('confirm-unclassified-cancel-btn');
+
+  let currentName = null;
+  let currentBalance = 0;
+
+  function updatePreview() {
+    const unit = loadSettings().voteUnitPoint;
+    const pts = clampInt(pointsInput.value, 0);
+    const votes = unit > 0 ? Math.floor(pts / unit) : 0;
+    const consumed = votes * unit;
+    previewEl.textContent = `${votes}票を確定 / 残り ${Math.max(currentBalance - consumed, 0)}pt`;
+  }
+
+  function openModal(name, balance) {
+    currentName = name;
+    currentBalance = balance;
+    nameEl.textContent = name;
+    balanceEl.textContent = String(balance);
+    populateEditTagSelect(tagSelect, undefined);
+    if (tagSelect.options.length > 1) tagSelect.selectedIndex = 1;
+    pointsInput.value = '';
+    pointsInput.max = String(balance);
+    updatePreview();
+    modal.hidden = false;
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+  }
+
+  aggregatePanel.addEventListener('click', (e) => {
+    const btn = e.target.closest('.confirm-unclassified-btn');
+    if (!btn) return;
+    openModal(btn.dataset.name, clampInt(btn.dataset.balance, 0));
+  });
+
+  pointsInput.addEventListener('input', updatePreview);
+  cancelBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    try {
+      const { votesAdded, remainingUnclassified } = confirmUnclassifiedPoints({
+        listenerName: currentName,
+        tag: tagSelect.value,
+        points: pointsInput.value,
+      });
+      showToast(`${currentName} → 「${tagSelect.value}」 +${votesAdded}票を確定(残り未分類: ${remainingUnclassified}pt)`);
+      closeModal();
+      refreshAllViews();
+    } catch (err) {
+      showToast(err.message);
+    }
   });
 }
 
@@ -920,6 +1102,7 @@ async function init() {
   setupEntryScreen();
   setupUnitSettings();
   setupHistoryList();
+  setupUnclassifiedConfirm();
   setupResetAll();
   setupExportImage();
 

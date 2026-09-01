@@ -73,6 +73,7 @@
 
         <div class="entry-actions">
           <button type="submit" class="btn btn-primary btn-large" id="register-btn">登録する</button>
+          <button type="button" class="btn btn-secondary" id="register-unclassified-btn">タグ未定のまま登録</button>
           <button type="button" class="btn btn-secondary" id="undo-btn">直前の登録を取り消す</button>
         </div>
       </form>
@@ -84,10 +85,12 @@
         <button class="sub-tab-btn active" data-subtab="tag">タグ</button>
         <button class="sub-tab-btn" data-subtab="listener">リスナー</button>
         <button class="sub-tab-btn" data-subtab="carry">端数</button>
+        <button class="sub-tab-btn" data-subtab="unclassified">未分類</button>
       </div>
       <div class="sub-panel" id="sub-panel-tag" data-subpanel="tag"></div>
       <div class="sub-panel" id="sub-panel-listener" data-subpanel="listener" hidden></div>
       <div class="sub-panel" id="sub-panel-carry" data-subpanel="carry" hidden></div>
+      <div class="sub-panel" id="sub-panel-unclassified" data-subpanel="unclassified" hidden></div>
     </section>
 
     <!-- ============== 3. 管理・設定タブ ============== -->
@@ -155,6 +158,30 @@
       <div class="modal-actions">
         <button type="submit" class="btn btn-primary">保存</button>
         <button type="button" class="btn btn-secondary" id="edit-cancel-btn">キャンセル</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 未分類ポイント確定用モーダル -->
+<div id="confirm-unclassified-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <h2>未分類ポイントを確定</h2>
+    <p>リスナー: <strong id="confirm-unclassified-name"></strong>
+       / 未分類残高: <strong id="confirm-unclassified-balance"></strong> pt</p>
+    <form id="confirm-unclassified-form">
+      <div class="field-group">
+        <label for="confirm-tag-select">タグ</label>
+        <select id="confirm-tag-select"></select>
+      </div>
+      <div class="field-group">
+        <label for="confirm-points-input">使用するポイント数</label>
+        <input type="number" id="confirm-points-input" inputmode="numeric" pattern="[0-9]*" min="1" step="1">
+      </div>
+      <p id="confirm-unclassified-preview" class="hint"></p>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">確定する</button>
+        <button type="button" class="btn btn-secondary" id="confirm-unclassified-cancel-btn">キャンセル</button>
       </div>
     </form>
   </div>
