@@ -1111,3 +1111,29 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    STORAGE_KEYS,
+    DEFAULT_SETTINGS,
+    RECENT_UNIT_POINTS_MAX,
+    clampInt,
+    escapeHtml,
+    formatDateTime,
+    loadLogs,
+    saveLogs,
+    loadSettings,
+    saveSettings,
+    computeDerivedState,
+    getListenerNameHistory,
+    nextAnonymousName,
+    registerVote,
+    confirmUnclassifiedPoints,
+    undoLastVote,
+    updateVoteLog,
+    deleteVoteLog,
+    updateVoteUnitPoint,
+    resetAllData,
+    init,
+  };
+}

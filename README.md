@@ -40,6 +40,18 @@
 
 投票データや設定はすべてブラウザの `localStorage` に保存されます。サーバーへの送信は行われないため、ブラウザやデバイスを変えると引き継がれません。データを保持したい場合は同一ブラウザ・同一端末で継続して利用してください。
 
+## テスト
+
+ロジック部分のユニットテストと、実際のDOM操作を伴う結合テストを [Vitest](https://vitest.dev/)（jsdom環境）で用意しています。
+
+```bash
+npm install
+npm test
+```
+
+- `tests/unit/` : `computeDerivedState` や `registerVote` などの集計・登録ロジックの単体テスト
+- `tests/integration/` : `index.html` を jsdom 上に読み込み、タブ切り替え・投票登録・未分類確定・編集・削除・単位ポイント変更・リセットなど画面操作込みの結合テスト
+
 ## AI利用について
 
 本リポジトリのコードの一部は、Claude Code（Anthropic）を利用して生成・編集されています。
