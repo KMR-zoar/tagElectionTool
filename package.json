@@ -4,7 +4,8 @@
   "type": "commonjs",
   "scripts": {
     "test": "vitest run",
-    "edit": "node edit/server.js"
+    "edit": "node edit/server.js",
+    "build": "vitest run && node scripts/build.js"
   },
   "devDependencies": {
     "jsdom": "^25.0.1",

@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm install     # devDependencies (vitest, jsdom) をインストール
 npm test        # テスト一式を実行 (vitest run)
+npm run build   # テスト合格後、公開用ファイルを dist/ に出力 (Cloudflare Pages へ手動アップロード)
 ```
 
 - 単一テストファイルの実行: `npx vitest run tests/unit/logic.test.js`
@@ -32,6 +33,8 @@ npm test        # テスト一式を実行 (vitest run)
 4. **タグマスタ読み込み** (`loadTagData`): 起動時に一度だけ `tags.json`(タグ名・よみ・カテゴリ)を `fetch` し、モジュールレベル変数 `TAG_DATA` に格納。タグのオートコンプリートや編集・確定時のプルダウンで使用する。
 5. **UI層** (`showToast` 以降): 素の DOM 操作のみで、仮想DOM等は使わない。2階層のタブ構成(`setupMainTabs` が 入力/集計/管理 のメインタブ、`setupAggregateSubTabs` が集計内のサブタブ)、タグ入力・リスナー名入力の双方で使い回す `setupAutocomplete` ヘルパー、そして状態変更後に全パネルを再描画する `refreshAllViews` を持つ。DOMを部分的に書き換えるのではなく、変更後は `refreshAllViews` を呼ぶこと。
 6. **ランキング画像出力** (`exportRankingImage` とその補助関数): タグ得票上位15件を `<canvas>` に描画し、PNGとして共有・ダウンロードする。`navigator.share()` はクリックハンドラの呼び出しスタック内で同期的に呼ぶ必要があるという制約がコード上にコメントされており、そのため canvas描画〜Blob生成までは `await` を挟まずに行っている。
+
+本番は Cloudflare Pages の Direct Upload で運用しており、公開するファイルは `scripts/build.js` の `FILES`(許可リスト)で管理している。新しい静的ファイルを追加したら `FILES` にも追加すること(`index.html` から参照される未登録ファイルがあるとビルドが失敗する)。
 
 `index.html` は3タブすべてのマークアップを一括で保持し、`hidden` 属性で表示を切り替える構成になっている。これにより結合テストで `index.html` をそのまま jsdom に読み込める。
 
