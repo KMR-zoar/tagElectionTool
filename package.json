@@ -3,7 +3,8 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "edit": "node edit/server.js"
   },
   "devDependencies": {
     "jsdom": "^25.0.1",

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>タグ定義エディタ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="toolbar">
+    <h1>タグ定義エディタ</h1>
+    <div class="toolbar-actions">
+      <span id="dirty-label" class="dirty-label" hidden>未保存の変更があります</span>
+      <button type="button" id="reload-btn">再読み込み</button>
+      <button type="button" id="add-btn">タグを追加</button>
+      <button type="button" id="save-btn" class="primary">tags.json に保存</button>
+    </div>
+  </header>
+
+  <main>
+    <p id="message" class="message" hidden></p>
+
+    <div class="filters">
+      <input type="search" id="search-input" placeholder="タグ名・よみで検索">
+      <select id="category-filter">
+        <option value="">すべてのカテゴリ</option>
+      </select>
+      <span id="count-label" class="count-label"></span>
+    </div>
+
+    <ul id="issues" class="issues" hidden></ul>
+
+    <table class="tag-table">
+      <thead>
+        <tr>
+          <th class="col-no">#</th>
+          <th class="col-tag">タグ</th>
+          <th class="col-yomi">よみ</th>
+          <th class="col-cat">カテゴリ</th>
+          <th class="col-ops">操作</th>
+        </tr>
+      </thead>
+      <tbody id="tag-tbody"></tbody>
+    </table>
+  </main>
+
+  <div id="tag-modal" class="modal" hidden>
+    <form id="tag-form" class="modal-content">
+      <h2 id="modal-title">タグを追加</h2>
+      <label class="field">
+        <span>タグ名</span>
+        <input type="text" id="form-tag" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>よみ(ひらがな)</span>
+        <input type="text" id="form-yomi" autocomplete="off">
+      </label>
+      <fieldset class="field">
+        <legend>カテゴリ</legend>
+        <div id="form-categories" class="cat-options"></div>
+        <input type="text" id="form-new-category" placeholder="新しいカテゴリ(カンマ区切りで複数可)" autocomplete="off">
+      </fieldset>
+      <p id="form-error" class="form-error" hidden></p>
+      <div class="modal-actions">
+        <button type="button" id="modal-cancel">キャンセル</button>
+        <button type="submit" class="primary">確定</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="editor.js"></script>
+</body>
+</html>
