@@ -21,6 +21,7 @@
 | `app.js` | アプリのロジック一式（データ永続化、集計計算、UI制御、画像出力など） |
 | `style.css` | スタイル定義 |
 | `tags.json` | タグ候補のマスタデータ（タグ名・読み・カテゴリ） |
+| `edit/` | `tags.json` を編集するローカル専用のタグ定義エディタ（`npm run edit` で起動、詳細は [edit/README.md](edit/README.md)） |
 
 ## 使い方
 

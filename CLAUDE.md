@@ -41,10 +41,15 @@ npm test        # テスト一式を実行 (vitest run)
 - リスナーごとにポイントを繰り越しで積算し、`voteUnitPoint` ポイントごとに1票へ変換、端数は次回に持ち越す。この変換は保存されず、読み取り時に毎回再計算される。
 - 「未分類プール」は繰り越し端数とは別会計であり、`fromUnclassified` エントリがどのように二重カウントを避けているかは `computeDerivedState` 内のコメントを参照すること。
 
+### タグ定義エディタ (`edit/`)
+
+`tags.json` を加除・修正するローカル専用サブツール。本体とは独立しており、本体のコードは参照しない。`npm run edit`(`node edit/server.js`)で `127.0.0.1:5501` に依存ゼロの Node サーバーを立て、`edit/` の静的配信と `GET`/`PUT /api/tags` による `tags.json` の読み書きを行う。`edit/editor.js` は本体と同じく末尾で `module.exports` する形式で、検証ロジック `validateTags` はブラウザ側とサーバー側(`server.js` が require)で共有している。保存時は既存ファイルの改行コードを維持する。
+
 ## テスト
 
 Vitest + jsdom 環境(設定は `vitest.config.js`、セットアップは `tests/setup.js`)。
 
 - `tests/unit/logic.test.js`: `computeDerivedState`、`registerVote` などの純粋なロジックを `app.js` から直接 import してテスト。
 - `tests/integration/app.test.js`: `index.html` の `<body>` を jsdom に読み込み、`app.js` を import して実際のイベントリスナーをアタッチした上で、DOMイベントの発火(タブ切り替え・フォーム送信・オートコンプリート選択・編集/削除モーダル・単位ポイント変更・リセットなど)を通じてUIを操作する。`global.fetch` は `tags.json` の実データを返すようモック、`window.confirm` は自動承認するようモックされている。
+- `tests/unit/tag-editor.test.js` / `tests/integration/tag-editor.test.js`: タグ定義エディタの純粋ロジックと、一時ディレクトリの `tags.json` を対象にしたサーバー API のテスト(後者は `@vitest-environment node`)。
 - 単体テスト・結合テストのどちらも同じ `app.js` を対象としており、UIコードから切り離された別モジュールは存在しないため、UIの配線を検証する主手段は結合テストになる。
